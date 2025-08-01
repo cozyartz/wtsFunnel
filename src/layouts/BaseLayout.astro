@@ -1,0 +1,107 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+  keywords?: string;
+}
+
+const { title, description = "Get a professional website that converts visitors into customers. Modern web design and development services for Southwest Michigan businesses.", keywords = "website development Michigan, professional website design, business website, web development Southwest Michigan, modern website design, responsive web design, SEO optimization" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/cmgLogo.png" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://wantthissite.com/" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://wantthissite.com/cmgLogo.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://wantthissite.com/" />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content="https://wantthissite.com/cmgLogo.png" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://wantthissite.com/" />
+    
+    <!-- Local Business -->
+    <meta name="geo.region" content="US-MI" />
+    <meta name="geo.placename" content="Battle Creek" />
+    <meta name="geo.position" content="42.3211;-85.1797" />
+    <meta name="ICBM" content="42.3211, -85.1797" />
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="dns-prefetch" href="https://customer-m033z5x00ks6nunl.cloudflarestream.com">
+    
+    <!-- Performance hints -->
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="msapplication-TileColor" content="#0ea5e9">
+    
+    <!-- Local Business Schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Cozyartz Media Group",
+        "description": "Modern website development and digital marketing services for Southwest Michigan businesses. Get a professional website that converts visitors into customers.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Battle Creek",
+          "addressRegion": "Michigan",
+          "postalCode": "49015"
+        },
+        "telephone": "269-261-0069",
+        "url": "https://wantthissite.com",
+        "serviceArea": {
+          "@type": "GeoCircle",
+          "geoMidpoint": {
+            "@type": "GeoCoordinates",
+            "latitude": 42.3211,
+            "longitude": -85.1797
+          },
+          "geoRadius": "50000"
+        },
+        "areaServed": ["Battle Creek", "Kalamazoo", "Grand Rapids", "Southwest Michigan"],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Web Development Services",
+          "itemListElement": [
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Website Development",
+                "description": "Custom website development for local businesses"
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "SEO Services",
+                "description": "Local search engine optimization services"
+              }
+            }
+          ]
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-gray-950 text-white min-h-screen">
+    <slot />
+  </body>
+</html>
