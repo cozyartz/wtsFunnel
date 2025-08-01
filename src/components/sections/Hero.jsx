@@ -1,11 +1,11 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Camera, Search, Star, Zap } from 'lucide-react';
-import { useRef } from 'react';
-import { Stream } from '@cloudflare/stream-react';
+import { useRef, useEffect } from 'react';
 import Button from '../ui/Button.jsx';
 
 const Hero = () => {
   const containerRef = useRef(null);
+  const playerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -14,28 +14,43 @@ const Hero = () => {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
 
+  useEffect(() => {
+    if (playerRef.current && window.Stream) {
+      const player = window.Stream(playerRef.current);
+      
+      // Try to autoplay with muted audio
+      player.muted = true;
+      player.play().catch(() => {
+        console.log('Autoplay prevented, video will play on user interaction');
+      });
+      
+      return () => {
+        // Cleanup if needed
+      };
+    }
+  }, []);
+
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Cloudflare Stream Video Background */}
       <motion.div 
         style={{ y, opacity }}
-        className="absolute inset-0 w-full h-[120%]"
+        className="fixed inset-0 w-full h-full -z-10"
       >
-        <Stream
-          src="b73a8ee5753d9421b2c4be53fcef1e14e7"
-          autoplay
-          muted
-          loop
-          controls={false}
-          playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover"
+        <iframe
+          ref={playerRef}
+          id="stream-player"
+          src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&autoplay=true&loop=true&controls=false"
+          className="w-full h-full"
           style={{
+            border: 'none',
             width: '100vw',
-            height: '120vh',
+            height: '100vh',
             objectFit: 'cover',
             pointerEvents: 'none'
           }}
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen={false}
         />
       </motion.div>
       
