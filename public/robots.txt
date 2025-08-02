@@ -1,3 +1,36 @@
+# This robots.txt works with Cloudflare's managed robots.txt
+# Cloudflare will prepend AI crawler blocks before this content
+
+# Allow legitimate search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Block aggressive crawlers and scrapers
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: Wayback
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Default policy for other bots
 User-agent: *
 Allow: /
 
@@ -11,6 +44,9 @@ Disallow: /node_modules/
 Disallow: /dist/
 Disallow: /.env
 Disallow: /wrangler.toml
+Disallow: /functions/
 
-# Allow all search engines to crawl the site
-# Optimized for lead generation and local SEO
+# Crawl delay for rate limiting
+Crawl-delay: 1
+
+# Optimized for lead generation while blocking AI crawlers via Cloudflare
