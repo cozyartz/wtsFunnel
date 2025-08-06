@@ -1,12 +1,12 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Camera, Search, Star, Zap } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
-import { Stream } from '@cloudflare/stream-react';
 import Button from '../ui/Button.jsx';
 import TextScramble from '../effects/TextScramble.jsx';
 
 const Hero = () => {
   const containerRef = useRef(null);
+  const playerRef = useRef(null);
   const [scrambleTrigger, setScrambleTrigger] = useState(false);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -23,17 +23,37 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleVideoLoadStart = () => {
-    console.log('Cloudflare Stream video loading started');
-  };
-
-  const handleVideoCanPlay = () => {
-    console.log('Cloudflare Stream video ready to play');
-  };
-
-  const handleVideoError = (error) => {
-    console.error('Cloudflare Stream video error:', error);
-  };
+  useEffect(() => {
+    // Load Cloudflare Stream SDK and initialize player
+    if (playerRef.current && window.Stream) {
+      const player = window.Stream(playerRef.current);
+      
+      player.addEventListener('loadstart', () => {
+        console.log('Cloudflare Stream video loading started');
+      });
+      
+      player.addEventListener('canplay', () => {
+        console.log('Cloudflare Stream video ready to play');
+        // Ensure muted autoplay
+        player.muted = true;
+        player.loop = true;
+        player.play().catch((error) => {
+          console.log('Autoplay failed, trying muted:', error);
+        });
+      });
+      
+      player.addEventListener('error', (error) => {
+        console.error('Cloudflare Stream video error:', error);
+      });
+      
+      return () => {
+        // Cleanup
+        if (player && typeof player.destroy === 'function') {
+          player.destroy();
+        }
+      };
+    }
+  }, []);
 
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
@@ -46,24 +66,21 @@ const Hero = () => {
           style={{ opacity }}
           className="w-full h-full overflow-hidden"
         >
-          <Stream
-            src="8ad00fdbc3d70603421156b74714001e"
-            autoplay={true}
-            muted={true}
-            loop={true}
-            controls={false}
-            className="w-full h-full object-cover pointer-events-none"
+          <iframe
+            ref={playerRef}
+            id="stream-player"
+            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false"
+            loading="eager"
             style={{
+              border: 'none',
               position: 'absolute',
               top: '-5%',
               left: '-5%',
               width: '110%',
-              height: '110%',
-              transform: 'scale(1.1)'
+              height: '110%'
             }}
-            onLoadStart={handleVideoLoadStart}
-            onCanPlay={handleVideoCanPlay}
-            onError={handleVideoError}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={false}
           />
         </motion.div>
       </motion.div>
