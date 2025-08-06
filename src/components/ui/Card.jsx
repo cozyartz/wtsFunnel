@@ -6,7 +6,7 @@ const Card = ({
   hover = true,
   ...props 
 }) => {
-  const baseClasses = 'bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg';
+  const baseClasses = 'bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg transition-all duration-300';
   
   return (
     <motion.div

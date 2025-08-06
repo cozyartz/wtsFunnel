@@ -11,15 +11,17 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
+import TiltCard from '../effects/TiltCard.jsx';
+import RevealAnimation from '../effects/RevealAnimation.jsx';
 
 const Services = () => {
   const services = [
     {
       icon: Search,
       title: 'SEO Domination',
-      description: 'Rank #1 for local searches and capture every potential customer in your area',
+      description: 'Rank #1 for local searches with AI-enhanced SEO strategies and capture every potential customer in your area',
       features: [
-        'Complete local SEO optimization',
+        'AI-powered SEO optimization',
         'Google Business Profile mastery',
         'Local keyword domination',
         'Citation building & management',
@@ -44,14 +46,14 @@ const Services = () => {
     },
     {
       icon: Globe,
-      title: 'SEO-Powered Websites',
-      description: 'Beautiful websites built for search engine domination and conversions',
+      title: 'AI-Enhanced Websites',
+      description: 'Beautiful websites with AI-powered features built for search engine domination and conversions',
       features: [
-        'SEO-optimized from day one',
-        'Drone photography integration',
+        'AI-optimized content and SEO',
+        'Smart conversion tracking',
         'Lightning-fast loading speeds',
         'Mobile-first design',
-        'Conversion optimization'
+        'Automated performance optimization'
       ],
       price: 'Starting at $3,997',
       popular: false
@@ -93,11 +95,11 @@ const Services = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              SEO Excellence & <span className="text-primary-400">Aerial Artistry</span>
+              AI-Powered SEO & <span className="text-primary-400">Smart Development</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Combining cutting-edge SEO expertise with breathtaking drone photography to make 
-              Southwest Michigan businesses dominate their markets both online and visually.
+              Combining AI-enhanced SEO strategies with intelligent web development to help 
+              Southwest Michigan businesses dominate their markets with cutting-edge technology.
             </p>
           </motion.div>
         </div>
@@ -105,54 +107,47 @@ const Services = () => {
         {/* Services Grid */}
         <div className="grid md:grid-cols-3 gap-8 mb-20">
           {services.map((service, index) => (
-            <motion.div
+            <RevealAnimation
               key={service.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.2, duration: 0.6 }}
-              className="relative"
+              delay={index * 0.2}
+              duration={0.6}
+              slideFrom="bottom"
             >
-              <Card className={`h-full ${service.popular ? 'ring-2 ring-primary-500' : ''}`}>
-                {service.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                
-                <div className="text-center mb-6">
-                  <div className="bg-primary-600/10 border border-primary-600/20 rounded-lg w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <service.icon className="w-8 h-8 text-primary-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{service.title}</h3>
-                  <p className="text-gray-300">{service.description}</p>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {service.features.map((feature) => (
-                    <div key={feature} className="flex items-center space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                      <span className="text-gray-300">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-auto">
+              <TiltCard className="relative h-full">
+                <Card className="h-full group border-gray-800 hover:border-primary-500/50 transition-all duration-300">
+                  
                   <div className="text-center mb-6">
-                    <span className="text-2xl font-bold text-primary-400">{service.price}</span>
+                    <div className="bg-primary-600/10 border border-primary-600/20 rounded-lg w-16 h-16 flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:bg-primary-600/20">
+                      <service.icon className="w-8 h-8 text-primary-400 transition-colors duration-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">{service.title}</h3>
+                    <p className="text-gray-300">{service.description}</p>
                   </div>
-                  <Button 
-                    variant={service.popular ? 'primary' : 'outline'} 
-                    className="w-full group"
-                  >
-                    Learn More
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
+
+                  <div className="space-y-3 mb-6">
+                    {service.features.map((feature) => (
+                      <div key={feature} className="flex items-center space-x-3">
+                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-gray-300">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto">
+                    <div className="text-center mb-6">
+                      <span className="text-2xl font-bold text-primary-400">{service.price}</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full group-hover:scale-105 transition-transform duration-300"
+                    >
+                      Learn More
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                </Card>
+              </TiltCard>
+            </RevealAnimation>
           ))}
         </div>
 

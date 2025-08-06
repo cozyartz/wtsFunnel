@@ -1,0 +1,95 @@
+import type { APIContext } from 'astro';
+
+// Simple rate limiting using in-memory storage
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // 30 requests per minute per IP
+
+// Store for rate limiting (per-edge instance)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+export async function onRequest(context: APIContext, next: () => Promise<Response>) {
+  const { request } = context;
+  
+  try {
+    // Get client IP from Cloudflare headers
+    const clientIP = request.headers.get('CF-Connecting-IP') || 
+                     request.headers.get('X-Forwarded-For') || 
+                     '127.0.0.1';
+    
+    // Check User-Agent for bot patterns
+    const userAgent = request.headers.get('User-Agent') || '';
+    const suspiciousBots = [
+      'bot', 'crawler', 'spider', 'scraper', 'python-requests', 
+      'curl', 'wget', 'httpclient', 'scrapy', 'selenium', 'headless'
+    ];
+    
+    const isSuspiciousBot = suspiciousBots.some(bot => 
+      userAgent.toLowerCase().includes(bot.toLowerCase())
+    );
+    
+    // Aggressive rate limiting for suspicious bots
+    const maxRequests = isSuspiciousBot ? 5 : MAX_REQUESTS_PER_WINDOW;
+    
+    const now = Date.now();
+    const key = `${clientIP}-${isSuspiciousBot ? 'bot' : 'user'}`;
+    const existing = rateLimitStore.get(key);
+    
+    if (existing && now < existing.resetTime) {
+      if (existing.count >= maxRequests) {
+        return new Response(JSON.stringify({
+          error: 'Rate limit exceeded',
+          retryAfter: Math.ceil((existing.resetTime - now) / 1000)
+        }), { 
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil((existing.resetTime - now) / 1000).toString(),
+            'X-RateLimit-Limit': maxRequests.toString(),
+            'X-RateLimit-Remaining': '0'
+          }
+        });
+      }
+      existing.count++;
+    } else {
+      rateLimitStore.set(key, {
+        count: 1,
+        resetTime: now + RATE_LIMIT_WINDOW
+      });
+    }
+    
+    // Block suspicious non-GET requests
+    if (isSuspiciousBot && request.method !== 'GET') {
+      return new Response(JSON.stringify({
+        error: 'Forbidden',
+        reason: 'Suspicious bot activity detected'
+      }), { 
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    // Continue to next middleware/handler
+    const response = await next();
+    
+    // Add security headers to response
+    const newHeaders = new Headers(response.headers);
+    const current = rateLimitStore.get(key);
+    if (current) {
+      newHeaders.set('X-RateLimit-Limit', maxRequests.toString());
+      newHeaders.set('X-RateLimit-Remaining', Math.max(0, maxRequests - current.count).toString());
+    }
+    
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders
+    });
+    
+  } catch (error) {
+    // Fail gracefully - continue to next handler
+    console.error('Middleware error:', error);
+    return next();
+  }
+}

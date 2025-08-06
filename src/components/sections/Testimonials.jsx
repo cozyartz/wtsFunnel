@@ -32,15 +32,15 @@ const Testimonials = () => {
       industry: 'Real Estate'
     },
     {
-      name: 'Mark Stevens',
-      title: 'Event Coordinator',
-      business: 'Stevens Wedding Venue',
+      name: 'Michael Chen',
+      title: 'CEO',
+      business: 'TechStart Solutions',
       location: 'Portage, MI',
       image: '/api/placeholder/80/80',
       rating: 5,
-      text: 'The aerial wedding photos and video tours of our venue are stunning! We went from 20 bookings per year to completely booked out 18 months in advance. The SEO work gets us found by every couple in Southwest Michigan.',
-      results: '+500% bookings',
-      industry: 'Events & Hospitality'
+      text: 'Cozyartz transformed our online presence completely. Our custom web application runs flawlessly, and we now rank #1 for all our target keywords. The ROI has been incredible.',
+      results: '+350% leads',
+      industry: 'Technology'
     },
     {
       name: 'Rachel Martinez',

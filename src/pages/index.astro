@@ -4,21 +4,29 @@ import Header from '../components/sections/Header.jsx';
 import Hero from '../components/sections/Hero.jsx';
 import WebsiteAudit from '../components/sections/WebsiteAudit.jsx';
 import Services from '../components/sections/Services.jsx';
+import Portfolio from '../components/sections/Portfolio.jsx';
+import About from '../components/sections/About.jsx';
 import Testimonials from '../components/sections/Testimonials.jsx';
 import Contact from '../components/sections/Contact.jsx';
 import Footer from '../components/sections/Footer.jsx';
+import SmoothScroll from '../components/effects/SmoothScroll.jsx';
+import AnimatedCursor from '../components/effects/AnimatedCursor.jsx';
 ---
 
 <BaseLayout 
-  title="Want This Site? | Professional Website Development | Southwest Michigan"
-  description="Transform your business with a professional website that converts. Modern web design, SEO optimization, and digital marketing for Southwest Michigan businesses."
-  keywords="professional website development, modern web design Michigan, business website design, responsive website, SEO optimization, digital marketing Southwest Michigan, website that converts"
+  title="Want This Site? | AI-Powered Website Development | Southwest Michigan"
+  description="Transform your business with AI-enhanced websites that convert visitors into customers. Intelligent web development, automated SEO, and AI solutions for Southwest Michigan businesses."
+  keywords="AI website development Michigan, artificial intelligence web design, AI-powered SEO, intelligent website development, machine learning web solutions, automated SEO Michigan, AI business development Southwest Michigan, smart website design"
 >
+  <SmoothScroll client:load />
+  <AnimatedCursor client:load />
   <Header client:load />
   <main>
     <Hero client:load />
     <WebsiteAudit client:load />
     <Services client:load />
+    <Portfolio client:load />
+    <About client:load />
     <Testimonials client:load />
     <Contact client:load />
   </main>

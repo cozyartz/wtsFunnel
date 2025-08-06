@@ -17,6 +17,8 @@ import Button from '../ui/Button.jsx';
 import Input from '../ui/Input.jsx';
 import Textarea from '../ui/Textarea.jsx';
 import Card from '../ui/Card.jsx';
+import ParticleBackground from '../effects/ParticleBackground.jsx';
+import RevealAnimation from '../effects/RevealAnimation.jsx';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -147,8 +149,9 @@ const Contact = () => {
   }
 
   return (
-    <section id="contact" className="py-20 bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="contact" className="py-20 bg-gray-950 relative">
+      <ParticleBackground />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <motion.div

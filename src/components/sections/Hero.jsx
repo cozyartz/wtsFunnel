@@ -1,11 +1,13 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Camera, Search, Star, Zap } from 'lucide-react';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import Button from '../ui/Button.jsx';
+import TextScramble from '../effects/TextScramble.jsx';
 
 const Hero = () => {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
+  const [scrambleTrigger, setScrambleTrigger] = useState(false);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -30,28 +32,43 @@ const Hero = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setScrambleTrigger(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Cloudflare Stream Video Background */}
+      {/* Cloudflare Stream Video Background with Parallax */}
       <motion.div 
-        style={{ y, opacity }}
-        className="fixed inset-0 w-full h-full -z-10"
+        style={{ y }}
+        className="absolute inset-0 w-full h-full -z-10"
       >
-        <iframe
-          ref={playerRef}
-          id="stream-player"
-          src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&autoplay=true&loop=true&controls=false"
+        <motion.div
+          style={{ opacity }}
           className="w-full h-full"
-          style={{
-            border: 'none',
-            width: '100vw',
-            height: '100vh',
-            objectFit: 'cover',
-            pointerEvents: 'none'
-          }}
-          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-          allowFullScreen={false}
-        />
+        >
+          <iframe
+            ref={playerRef}
+            id="stream-player"
+            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&autoplay=true&loop=true&controls=false"
+            className="w-full h-full scale-110"
+            style={{
+              border: 'none',
+              width: '110%',
+              height: '110%',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+              position: 'absolute',
+              top: '-5%',
+              left: '-5%'
+            }}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={false}
+          />
+        </motion.div>
       </motion.div>
       
       {/* Dark Overlay for Text Readability */}
@@ -73,7 +90,7 @@ const Hero = () => {
             className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 mb-8"
           >
             <Camera className="w-5 h-5 text-primary-400" />
-            <span className="text-white text-sm font-medium">Professional Web Development • Southwest Michigan</span>
+            <span className="text-white text-sm font-medium">AI-Powered Web Development • Southwest Michigan</span>
           </motion.div>
 
           {/* Main Headline */}
@@ -83,7 +100,9 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6"
           >
-            <span className="text-white">Want This Site?</span>
+            <span className="text-white">
+              <TextScramble text="Want This Site?" trigger={scrambleTrigger} />
+            </span>
             <br />
             <span className="bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
               Get a Website That Converts
@@ -97,8 +116,8 @@ const Hero = () => {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-xl lg:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed"
           >
-            Transform your business with a professional website that turns visitors into customers. 
-            Modern design, powerful SEO, and proven conversion strategies for Southwest Michigan businesses.
+            Transform your business with AI-enhanced websites that turn visitors into customers. 
+            Modern design, intelligent SEO automation, and AI-powered conversion strategies for Southwest Michigan businesses.
           </motion.p>
 
           {/* Trust Indicators with New Focus */}
@@ -113,8 +132,8 @@ const Hero = () => {
               <span className="text-white text-sm font-medium">Local SEO Experts</span>
             </div>
             <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
-              <Camera className="w-5 h-5 text-primary-400" />
-              <span className="text-white text-sm font-medium">Modern Design</span>
+              <Zap className="w-5 h-5 text-primary-400" />
+              <span className="text-white text-sm font-medium">AI Development</span>
             </div>
             <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
               <div className="flex">
