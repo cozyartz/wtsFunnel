@@ -2,12 +2,10 @@
 import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
-import cloudflare from '@astrojs/cloudflare';
 
-// Production config for Cloudflare Pages
+// Production config for Cloudflare Pages (static)
 export default defineConfig({
-  output: 'server',
-  adapter: cloudflare(),
+  output: 'static',
   integrations: [
     tailwind(),
     react({
