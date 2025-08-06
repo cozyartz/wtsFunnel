@@ -1,12 +1,12 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Camera, Search, Star, Zap } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
+import { Stream } from '@cloudflare/stream-react';
 import Button from '../ui/Button.jsx';
 import TextScramble from '../effects/TextScramble.jsx';
 
 const Hero = () => {
   const containerRef = useRef(null);
-  const playerRef = useRef(null);
   const [scrambleTrigger, setScrambleTrigger] = useState(false);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -23,18 +23,17 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    // Ensure video iframe loads properly
-    if (playerRef.current) {
-      playerRef.current.onload = () => {
-        console.log('Cloudflare Stream video loaded successfully');
-      };
-      
-      playerRef.current.onerror = () => {
-        console.error('Failed to load Cloudflare Stream video');
-      };
-    }
-  }, []);
+  const handleVideoLoadStart = () => {
+    console.log('Cloudflare Stream video loading started');
+  };
+
+  const handleVideoCanPlay = () => {
+    console.log('Cloudflare Stream video ready to play');
+  };
+
+  const handleVideoError = (error) => {
+    console.error('Cloudflare Stream video error:', error);
+  };
 
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
@@ -47,22 +46,24 @@ const Hero = () => {
           style={{ opacity }}
           className="w-full h-full overflow-hidden"
         >
-          <iframe
-            ref={playerRef}
-            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&autoplay=true&loop=true&controls=false&preload=auto"
+          <Stream
+            src="8ad00fdbc3d70603421156b74714001e"
+            autoplay={true}
+            muted={true}
+            loop={true}
+            controls={false}
+            className="w-full h-full object-cover pointer-events-none"
             style={{
-              border: 'none',
               position: 'absolute',
               top: '-5%',
               left: '-5%',
               width: '110%',
               height: '110%',
-              objectFit: 'cover',
-              pointerEvents: 'none'
+              transform: 'scale(1.1)'
             }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={false}
-            loading="eager"
+            onLoadStart={handleVideoLoadStart}
+            onCanPlay={handleVideoCanPlay}
+            onError={handleVideoError}
           />
         </motion.div>
       </motion.div>
