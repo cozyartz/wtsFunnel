@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Camera, Search, Star, Zap } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
+import { Stream } from '@cloudflare/stream-react';
 import Button from '../ui/Button.jsx';
 import TextScramble from '../effects/TextScramble.jsx';
 
@@ -15,22 +16,6 @@ const Hero = () => {
   
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
-
-  useEffect(() => {
-    if (playerRef.current && window.Stream) {
-      const player = window.Stream(playerRef.current);
-      
-      // Try to autoplay with muted audio
-      player.muted = true;
-      player.play().catch(() => {
-        console.log('Autoplay prevented, video will play on user interaction');
-      });
-      
-      return () => {
-        // Cleanup if needed
-      };
-    }
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,23 +35,22 @@ const Hero = () => {
           style={{ opacity }}
           className="w-full h-full"
         >
-          <iframe
-            ref={playerRef}
-            id="stream-player"
-            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&autoplay=true&loop=true&controls=false"
-            className="w-full h-full scale-110"
+          <Stream
+            controls={false}
+            src="8ad00fdbc3d70603421156b74714001e"
+            height="110%"
+            width="110%"
+            autoplay={true}
+            muted={true}
+            loop={true}
+            className="scale-110 object-cover pointer-events-none"
             style={{
-              border: 'none',
-              width: '110%',
-              height: '110%',
-              objectFit: 'cover',
-              pointerEvents: 'none',
               position: 'absolute',
               top: '-5%',
-              left: '-5%'
+              left: '-5%',
+              width: '110%',
+              height: '110%'
             }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={false}
           />
         </motion.div>
       </motion.div>
