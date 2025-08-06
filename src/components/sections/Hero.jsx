@@ -24,67 +24,8 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Hero component mounted, checking for Stream SDK...');
-    console.log('window.Stream available:', !!window.Stream);
-    console.log('playerRef.current:', !!playerRef.current);
-    
-    // Add a small delay to ensure iframe is loaded
-    const initializePlayer = () => {
-      if (playerRef.current) {
-        console.log('Iframe src:', playerRef.current.src);
-        
-        if (window.Stream) {
-          console.log('Initializing Stream player...');
-          const player = window.Stream(playerRef.current);
-          
-          player.addEventListener('loadstart', () => {
-            console.log('✅ Cloudflare Stream video loading started');
-          });
-          
-          player.addEventListener('canplay', () => {
-            console.log('✅ Cloudflare Stream video ready to play');
-            // Ensure muted autoplay
-            player.muted = true;
-            player.loop = true;
-            player.play().then(() => {
-              console.log('✅ Video playing successfully');
-            }).catch((error) => {
-              console.log('❌ Autoplay failed:', error);
-              // Force play after user interaction
-              document.addEventListener('click', () => {
-                player.play();
-              }, { once: true });
-            });
-          });
-          
-          player.addEventListener('error', (error) => {
-            console.error('❌ Cloudflare Stream video error:', error);
-          });
-          
-          player.addEventListener('loadeddata', () => {
-            console.log('✅ Video data loaded');
-          });
-          
-          return () => {
-            if (player && typeof player.destroy === 'function') {
-              player.destroy();
-            }
-          };
-        } else {
-          console.error('❌ Stream SDK not loaded');
-        }
-      }
-    };
-
-    // Try immediately and then with delays
-    initializePlayer();
-    const timeout1 = setTimeout(initializePlayer, 1000);
-    const timeout2 = setTimeout(initializePlayer, 3000);
-    
-    return () => {
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-    };
+    // Simple approach - let the iframe handle everything
+    console.log('Video iframe should be loading automatically');
   }, []);
 
   return (
@@ -96,33 +37,32 @@ const Hero = () => {
       >
         <motion.div
           style={{ opacity }}
-          className="w-full h-full overflow-hidden"
+          className="relative w-full h-full overflow-hidden"
         >
-          <iframe
-            ref={playerRef}
-            id="stream-player"
-            src={`https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false&preload=auto&t=${Date.now()}`}
-            loading="eager"
-            style={{
-              border: '2px solid red', // Debug border
-              position: 'absolute',
-              top: '-5%',
-              left: '-5%',
-              width: '110%',
-              height: '110%',
-              backgroundColor: 'rgba(255, 0, 0, 0.1)' // Debug background
-            }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={false}
-            onLoad={() => console.log('✅ Iframe loaded')}
-            onError={() => console.error('❌ Iframe failed to load')}
-          />
+          <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%', height: '100%' }}>
+            <iframe
+              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600&autoplay=true&muted=true&loop=true&controls=false"
+              loading="eager"
+              style={{
+                border: 'none',
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                height: '100%',
+                width: '100%',
+                transform: 'scale(1.2)',
+                transformOrigin: 'center center'
+              }}
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+              allowFullScreen={true}
+            />
+          </div>
         </motion.div>
       </motion.div>
       
-      {/* Dark Overlay for Text Readability - Reduced for debugging */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30"></div>
+      {/* Dark Overlay for Text Readability */}
+      <div className="absolute inset-0 bg-black/50"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
