@@ -37,26 +37,27 @@ const Hero = () => {
       >
         <motion.div
           style={{ opacity }}
-          className="relative w-full h-full overflow-hidden"
+          className="absolute inset-0 w-full h-full"
         >
-          <div style={{ position: 'relative', paddingTop: '56.25%', width: '100%', height: '100%' }}>
-            <iframe
-              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600&autoplay=true&muted=true&loop=true&controls=false"
-              loading="eager"
-              style={{
-                border: 'none',
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                height: '100%',
-                width: '100%',
-                transform: 'scale(1.2)',
-                transformOrigin: 'center center'
-              }}
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-              allowFullScreen={true}
-            />
-          </div>
+          <iframe
+            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+            loading="eager"
+            style={{
+              border: 'none',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              minWidth: '100%',
+              minHeight: '100%',
+              width: 'auto',
+              height: 'auto',
+              transform: 'translate(-50%, -50%) scale(1.1)',
+              transformOrigin: 'center center',
+              objectFit: 'cover'
+            }}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={true}
+          />
         </motion.div>
       </motion.div>
       
