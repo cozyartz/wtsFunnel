@@ -13,7 +13,7 @@ const Hero = () => {
     offset: ["start start", "end start"]
   });
   
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
 
   useEffect(() => {
@@ -31,35 +31,29 @@ const Hero = () => {
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       {/* Cloudflare Stream Video Background with Parallax */}
-      <motion.div 
-        style={{ y }}
-        className="absolute inset-0 w-full h-full -z-10"
-      >
-        <motion.div
-          style={{ opacity }}
-          className="absolute inset-0 w-full h-full"
-        >
-          <iframe
-            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
-            loading="eager"
-            style={{
-              border: 'none',
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              minWidth: '100%',
-              minHeight: '100%',
-              width: 'auto',
-              height: 'auto',
-              transform: 'translate(-50%, -50%) scale(1.1)',
-              transformOrigin: 'center center',
-              objectFit: 'cover'
-            }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={true}
-          />
-        </motion.div>
-      </motion.div>
+      <div className="absolute inset-0 w-full h-full -z-10">
+        <motion.iframe
+          src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+          loading="eager"
+          style={{
+            border: 'none',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            minWidth: '100%',
+            minHeight: '100%',
+            width: 'auto',
+            height: 'auto',
+            transform: `translate(-50%, -50%) scale(1.1)`,
+            transformOrigin: 'center center',
+            objectFit: 'cover',
+            y: y,
+            opacity: opacity
+          }}
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen={true}
+        />
+      </div>
       
       {/* Dark Overlay for Text Readability */}
       <div className="absolute inset-0 bg-black/50"></div>
