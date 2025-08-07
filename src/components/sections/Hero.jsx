@@ -32,11 +32,8 @@ const Hero = () => {
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       {/* Cloudflare Stream Video Background with Parallax */}
       <div className="absolute inset-0 w-full h-full -z-10">
-        <motion.iframe
-          src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
-          loading="eager"
+        <motion.div
           style={{
-            border: 'none',
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -46,13 +43,23 @@ const Hero = () => {
             height: 'auto',
             transform: `translate(-50%, -50%) scale(1.1)`,
             transformOrigin: 'center center',
-            objectFit: 'cover',
             y: y,
             opacity: opacity
           }}
-          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-          allowFullScreen={true}
-        />
+        >
+          <iframe
+            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+            loading="eager"
+            style={{
+              border: 'none',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={true}
+          />
+        </motion.div>
       </div>
       
       {/* Dark Overlay for Text Readability */}
