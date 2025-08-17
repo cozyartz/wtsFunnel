@@ -8,9 +8,19 @@ const Hero = () => {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
   const [scrambleTrigger, setScrambleTrigger] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [videoState, setVideoState] = useState({
+    loaded: false,
+    error: false,
+    source: 'stream', // 'stream', 'direct', 'fallback'
+    retryCount: 0,
+    lastError: null,
+    debugInfo: {
+      domain: '',
+      userAgent: '',
+      timestamp: null
+    }
+  });
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
@@ -20,6 +30,13 @@ const Hero = () => {
   const videoY = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const videoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.15]);
 
+  // Professional video source configuration
+  const videoSources = {
+    stream: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false",
+    direct: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.m3u8",
+    backup: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/downloads/default.mp4"
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setScrambleTrigger(true);
@@ -27,114 +44,179 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Video reload mechanism with exponential backoff
-  const reloadVideo = () => {
-    if (retryCount < 3) {
-      const iframe = videoRef.current;
-      if (iframe) {
-        console.log(`Attempting video reload (attempt ${retryCount + 1})`);
-        const currentSrc = iframe.src;
-        iframe.src = '';
-        setTimeout(() => {
-          iframe.src = currentSrc;
-          setRetryCount(prev => prev + 1);
-        }, Math.pow(2, retryCount) * 1000); // Exponential backoff
+  // Professional video error reporting
+  const reportVideoError = (error, context = {}) => {
+    const errorReport = {
+      error: error.message || error,
+      context,
+      timestamp: new Date().toISOString(),
+      domain: window.location.hostname,
+      userAgent: navigator.userAgent.substring(0, 100),
+      videoState: videoState.source,
+      retryCount: videoState.retryCount
+    };
+    
+    console.group('🎥 Video Error Report');
+    console.error('Error:', error);
+    console.table(errorReport);
+    console.groupEnd();
+    
+    setVideoState(prev => ({
+      ...prev,
+      lastError: errorReport,
+      debugInfo: {
+        domain: errorReport.domain,
+        userAgent: errorReport.userAgent,
+        timestamp: errorReport.timestamp
       }
+    }));
+  };
+
+  // Professional video source switching with fallbacks
+  const switchVideoSource = async (newSource) => {
+    const iframe = videoRef.current;
+    if (!iframe) return false;
+
+    try {
+      console.log(`🎥 Switching to ${newSource} video source`);
+      
+      setVideoState(prev => ({
+        ...prev,
+        source: newSource,
+        loaded: false,
+        error: false
+      }));
+
+      // Clear current source
+      iframe.src = '';
+      
+      // Wait before setting new source
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Set new source
+      iframe.src = videoSources[newSource];
+      
+      return true;
+    } catch (error) {
+      reportVideoError(error, { context: 'source_switching', newSource });
+      return false;
+    }
+  };
+
+  // Progressive fallback strategy
+  const handleVideoFailure = async () => {
+    const { source, retryCount } = videoState;
+    
+    if (retryCount >= 3) {
+      console.warn('🎥 Max retries reached, showing fallback background');
+      setVideoState(prev => ({ ...prev, error: true }));
+      return;
+    }
+
+    // Progressive fallback chain
+    if (source === 'stream' && retryCount === 0) {
+      // First retry: try stream again
+      setTimeout(() => {
+        setVideoState(prev => ({ ...prev, retryCount: prev.retryCount + 1 }));
+        switchVideoSource('stream');
+      }, 2000);
+    } else if (source === 'stream' && retryCount === 1) {
+      // Second attempt: switch to direct video
+      console.log('🎥 Stream failed, trying direct video source');
+      await switchVideoSource('direct');
+      setVideoState(prev => ({ ...prev, retryCount: prev.retryCount + 1 }));
     } else {
-      console.error('Max video reload attempts reached, using fallback');
-      setVideoError(true);
+      // Final fallback: show enhanced background
+      console.log('🎥 All video sources failed, using enhanced background');
+      setVideoState(prev => ({ ...prev, error: true }));
     }
   };
 
   useEffect(() => {
-    // Check if we're on an allowed domain for the video
+    console.group('🎥 Professional Video Initialization');
+    
+    // Initialize debug info
     const currentDomain = window.location.hostname;
-    const allowedDomains = [
-      'wantthissite.com',
-      'www.wantthissite.com',
-      'localhost',
-      '127.0.0.1',
-      // Cloudflare Pages domains
-      'cozyartz-sales-funnel.pages.dev',
-      // Allow any Cloudflare Pages subdomain
-      '.pages.dev'
-    ];
+    console.log('Domain:', currentDomain);
+    console.log('User Agent:', navigator.userAgent.substring(0, 100));
+    console.log('Video Source:', videoState.source);
     
-    const isAllowedDomain = allowedDomains.some(domain => 
-      currentDomain === domain || 
-      currentDomain.includes(domain) ||
-      (domain.startsWith('.') && currentDomain.endsWith(domain))
-    );
-    
-    console.log(`Current domain: ${currentDomain}, Allowed: ${isAllowedDomain}`);
-    
-    if (!isAllowedDomain) {
-      console.warn(`Video may be restricted. Current domain: ${currentDomain}`);
-      // Don't immediately show error - let the video try to load first
-    }
-
-    // Cloudflare Stream iframe monitoring
     const iframe = videoRef.current;
-    if (iframe) {
-      const handleLoad = () => {
-        console.log('Cloudflare Stream iframe loaded successfully');
-        setVideoError(false);
-        setVideoLoaded(true);
-        setRetryCount(0);
-      };
-      
-      const handleError = (e) => {
-        console.error('Cloudflare Stream iframe error:', e);
-        setVideoLoaded(false);
-        setVideoError(true);
-      };
-
-      iframe.addEventListener('load', handleLoad);
-      iframe.addEventListener('error', handleError);
-      
-      // Check for domain restriction message in iframe
-      const checkDomainRestriction = () => {
-        try {
-          // This will fail due to CORS, but we can check for the lock icon
-          if (iframe.contentDocument) {
-            const lockMessage = iframe.contentDocument.querySelector('[data-testid="lock-icon"]');
-            if (lockMessage) {
-              console.warn('Video is domain-restricted');
-              setVideoError(true);
-            }
-          }
-        } catch (e) {
-          // Expected CORS error - iframe loaded but cross-origin
-          if (!videoLoaded) {
-            // Give it more time to load
-            setTimeout(() => {
-              if (!videoLoaded) {
-                console.warn('Video may be domain-restricted, showing fallback');
-                setVideoError(true);
-              }
-            }, 5000);
-          }
-        }
-      };
-      
-      // Check after a delay
-      setTimeout(checkDomainRestriction, 2000);
-      
-      // Load timeout - Stream should load within 5 seconds
-      const timeoutId = setTimeout(() => {
-        if (!videoLoaded && !videoError) {
-          console.warn('Stream iframe timeout - showing fallback background');
-          setVideoError(true);
-        }
-      }, 5000);
-
-      return () => {
-        iframe.removeEventListener('load', handleLoad);
-        iframe.removeEventListener('error', handleError);
-        clearTimeout(timeoutId);
-      };
+    if (!iframe) {
+      console.warn('Video iframe ref not available');
+      console.groupEnd();
+      return;
     }
-  }, [videoError, videoLoaded, retryCount]);
+
+    const handleLoad = () => {
+      console.log('✅ Video iframe loaded successfully');
+      setVideoState(prev => ({
+        ...prev,
+        loaded: true,
+        error: false,
+        retryCount: 0
+      }));
+      console.groupEnd();
+    };
+    
+    const handleError = (e) => {
+      console.error('❌ Video iframe error');
+      reportVideoError(e, { context: 'iframe_error' });
+      handleVideoFailure();
+    };
+
+    // Professional iframe monitoring
+    iframe.addEventListener('load', handleLoad);
+    iframe.addEventListener('error', handleError);
+    
+    // Advanced load detection
+    const checkVideoLoad = () => {
+      try {
+        // Check if iframe has loaded content
+        const rect = iframe.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          console.log('📊 Iframe dimensions:', rect.width, 'x', rect.height);
+        }
+        
+        // Check if we can access iframe content (will fail due to CORS, but that's expected)
+        try {
+          const doc = iframe.contentDocument;
+          if (doc && doc.body) {
+            console.log('📄 Iframe content accessible');
+          }
+        } catch (corsError) {
+          // Expected CORS error means iframe loaded external content
+          if (!videoState.loaded && !videoState.error) {
+            console.log('🔒 CORS blocked (expected) - iframe likely loaded');
+            // Consider this a successful load
+            handleLoad();
+          }
+        }
+      } catch (error) {
+        reportVideoError(error, { context: 'load_detection' });
+      }
+    };
+    
+    // Multiple load detection strategies
+    const checkInterval = setInterval(checkVideoLoad, 1000);
+    
+    // Professional timeout with progressive fallback
+    const timeoutId = setTimeout(async () => {
+      if (!videoState.loaded && !videoState.error) {
+        console.warn('⏱️ Video load timeout reached');
+        await handleVideoFailure();
+      }
+    }, 4000); // Reduced timeout for faster fallback
+
+    console.groupEnd();
+
+    return () => {
+      iframe.removeEventListener('load', handleLoad);
+      iframe.removeEventListener('error', handleError);
+      clearInterval(checkInterval);
+      clearTimeout(timeoutId);
+    };
+  }, [videoState.source]); // Only re-run when source changes
 
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
@@ -146,7 +228,7 @@ const Hero = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(147,51,234,0.1),transparent_50%)]" />
         </div>
         
-        {/* Cloudflare Stream Player with Parallax - Domain-aware */}
+        {/* Professional Video Player with Parallax and Multi-Source Support */}
         <motion.div 
           className="absolute inset-0 w-full h-full overflow-hidden"
           style={{
@@ -154,39 +236,84 @@ const Hero = () => {
             scale: videoScale,
           }}
         >
-          <iframe
-            ref={videoRef}
-            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false"
-            className="absolute top-0 left-0 w-full h-full"
-            style={{
-              border: 'none',
-              pointerEvents: 'none',
-              opacity: videoError ? 0 : 1,
-              transition: 'opacity 0.5s ease',
-              objectFit: 'cover',
-              width: '120%',
-              height: '120%',
-              left: '-10%',
-              top: '-10%'
-            }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={true}
-            title="Background Video"
-            onLoad={() => {
-              console.log('Cloudflare Stream iframe loaded successfully');
-              setVideoLoaded(true);
-              setVideoError(false);
-            }}
-            onError={(e) => {
-              console.error('Cloudflare Stream iframe failed to load:', e);
-              setVideoLoaded(false);
-              // Check if domain restriction is the issue
-              if (e.target && e.target.src.includes('cloudflarestream.com')) {
-                console.warn('Video may be restricted to specific domains');
-              }
-              setVideoError(true);
-            }}
-          />
+          {/* Stream iframe (primary) */}
+          {videoState.source === 'stream' && (
+            <iframe
+              ref={videoRef}
+              src={videoSources.stream}
+              className="absolute top-0 left-0 w-full h-full"
+              style={{
+                border: 'none',
+                pointerEvents: 'none',
+                opacity: videoState.error ? 0 : 1,
+                transition: 'opacity 0.8s ease-in-out',
+                objectFit: 'cover',
+                width: '120%',
+                height: '120%',
+                left: '-10%',
+                top: '-10%',
+                zIndex: 1
+              }}
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+              allowFullScreen={true}
+              title="Background Video Stream"
+            />
+          )}
+          
+          {/* Direct video fallback */}
+          {videoState.source === 'direct' && (
+            <video
+              ref={videoRef}
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              style={{
+                pointerEvents: 'none',
+                opacity: videoState.error ? 0 : 1,
+                transition: 'opacity 0.8s ease-in-out',
+                width: '120%',
+                height: '120%',
+                left: '-10%',
+                top: '-10%',
+                zIndex: 1
+              }}
+              autoPlay
+              muted
+              loop
+              playsInline
+              onLoadedData={() => {
+                console.log('✅ Direct video loaded successfully');
+                setVideoState(prev => ({ ...prev, loaded: true, error: false }));
+              }}
+              onError={(e) => {
+                console.error('❌ Direct video failed');
+                reportVideoError(e, { context: 'direct_video_error' });
+                handleVideoFailure();
+              }}
+            >
+              <source src={videoSources.direct} type="application/vnd.apple.mpegurl" />
+              <source src={videoSources.backup} type="video/mp4" />
+            </video>
+          )}
+          
+          {/* Loading indicator */}
+          {!videoState.loaded && !videoState.error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+              <div className="flex items-center gap-3 text-white/70">
+                <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm font-medium">Loading video...</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Debug info (development only) */}
+          {process.env.NODE_ENV === 'development' && videoState.debugInfo.domain && (
+            <div className="absolute top-4 right-4 bg-black/80 text-white text-xs p-2 rounded font-mono max-w-xs">
+              <div>Source: {videoState.source}</div>
+              <div>Loaded: {videoState.loaded ? '✅' : '❌'}</div>
+              <div>Error: {videoState.error ? '❌' : '✅'}</div>
+              <div>Retries: {videoState.retryCount}</div>
+              <div>Domain: {videoState.debugInfo.domain}</div>
+            </div>
+          )}
         </motion.div>
         
         {/* Subtle overlay for text readability */}
