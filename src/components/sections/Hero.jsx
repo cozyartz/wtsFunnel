@@ -30,11 +30,11 @@ const Hero = () => {
   const videoY = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const videoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.15]);
 
-  // Working Cloudflare Stream sources - "The Creek" video
+  // Cloudflare Stream sources - "The Creek" video (correct ID from screenshot)
   const videoSources = {
-    stream: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/iframe?autoplay=true&muted=true&loop=true&controls=false",
-    direct: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/manifest/video.m3u8",
-    backup: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/downloads/default.mp4"
+    stream: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c3d7060342115670474188d4/iframe?autoplay=true&muted=true&loop=true&controls=false",
+    direct: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c3d7060342115670474188d4/manifest/video.m3u8",
+    backup: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c3d7060342115670474188d4/downloads/default.mp4"
   };
 
   useEffect(() => {
@@ -133,90 +133,56 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    console.group('🎥 Professional Video Initialization');
+    console.group('🎥 Cloudflare Stream Initialization');
     
     // Initialize debug info
     const currentDomain = window.location.hostname;
     console.log('Domain:', currentDomain);
-    console.log('User Agent:', navigator.userAgent.substring(0, 100));
-    console.log('Video Source:', videoState.source);
+    console.log('Stream URL:', videoSources.stream);
     
     const iframe = videoRef.current;
     if (!iframe) {
-      console.warn('Video iframe ref not available');
+      console.warn('Stream iframe ref not available');
       console.groupEnd();
       return;
     }
 
     const handleLoad = () => {
-      console.log('✅ Video iframe loaded successfully');
+      console.log('✅ Cloudflare Stream iframe loaded');
       setVideoState(prev => ({
         ...prev,
         loaded: true,
         error: false,
         retryCount: 0
       }));
-      console.groupEnd();
     };
     
     const handleError = (e) => {
-      console.error('❌ Video iframe error');
-      reportVideoError(e, { context: 'iframe_error' });
-      handleVideoFailure();
+      console.error('❌ Cloudflare Stream iframe error');
+      reportVideoError(e, { context: 'stream_error' });
+      setVideoState(prev => ({ ...prev, error: true }));
     };
 
-    // Professional iframe monitoring
+    // Stream iframe monitoring
     iframe.addEventListener('load', handleLoad);
     iframe.addEventListener('error', handleError);
     
-    // Advanced load detection
-    const checkVideoLoad = () => {
-      try {
-        // Check if iframe has loaded content
-        const rect = iframe.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          console.log('📊 Iframe dimensions:', rect.width, 'x', rect.height);
-        }
-        
-        // Check if we can access iframe content (will fail due to CORS, but that's expected)
-        try {
-          const doc = iframe.contentDocument;
-          if (doc && doc.body) {
-            console.log('📄 Iframe content accessible');
-          }
-        } catch (corsError) {
-          // Expected CORS error means iframe loaded external content
-          if (!videoState.loaded && !videoState.error) {
-            console.log('🔒 CORS blocked (expected) - iframe likely loaded');
-            // Consider this a successful load
-            handleLoad();
-          }
-        }
-      } catch (error) {
-        reportVideoError(error, { context: 'load_detection' });
-      }
-    };
-    
-    // Multiple load detection strategies
-    const checkInterval = setInterval(checkVideoLoad, 1000);
-    
-    // Professional timeout with progressive fallback
-    const timeoutId = setTimeout(async () => {
+    // Load timeout for Stream
+    const timeoutId = setTimeout(() => {
       if (!videoState.loaded && !videoState.error) {
-        console.warn('⏱️ Video load timeout reached');
-        await handleVideoFailure();
+        console.warn('⏱️ Cloudflare Stream timeout - showing fallback');
+        setVideoState(prev => ({ ...prev, error: true }));
       }
-    }, 4000); // Reduced timeout for faster fallback
+    }, 6000);
 
     console.groupEnd();
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
-      clearInterval(checkInterval);
       clearTimeout(timeoutId);
     };
-  }, [videoState.source]); // Only re-run when source changes
+  }, []); // Only run once on mount
 
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
@@ -228,7 +194,7 @@ const Hero = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(147,51,234,0.1),transparent_50%)]" />
         </div>
         
-        {/* Professional Video Player with Parallax and Multi-Source Support */}
+        {/* Cloudflare Stream Player with Parallax */}
         <motion.div 
           className="absolute inset-0 w-full h-full overflow-hidden"
           style={{
@@ -236,63 +202,36 @@ const Hero = () => {
             scale: videoScale,
           }}
         >
-          {/* Stream iframe (primary) */}
-          {videoState.source === 'stream' && (
-            <iframe
-              ref={videoRef}
-              src={videoSources.stream}
-              className="absolute top-0 left-0 w-full h-full"
-              style={{
-                border: 'none',
-                pointerEvents: 'none',
-                opacity: videoState.error ? 0 : 1,
-                transition: 'opacity 0.8s ease-in-out',
-                objectFit: 'cover',
-                width: '120%',
-                height: '120%',
-                left: '-10%',
-                top: '-10%',
-                zIndex: 1
-              }}
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-              allowFullScreen={true}
-              title="Background Video Stream"
-            />
-          )}
-          
-          {/* Direct video fallback */}
-          {videoState.source === 'direct' && (
-            <video
-              ref={videoRef}
-              className="absolute top-0 left-0 w-full h-full object-cover"
-              style={{
-                pointerEvents: 'none',
-                opacity: videoState.error ? 0 : 1,
-                transition: 'opacity 0.8s ease-in-out',
-                width: '120%',
-                height: '120%',
-                left: '-10%',
-                top: '-10%',
-                zIndex: 1
-              }}
-              autoPlay
-              muted
-              loop
-              playsInline
-              onLoadedData={() => {
-                console.log('✅ Direct video loaded successfully');
-                setVideoState(prev => ({ ...prev, loaded: true, error: false }));
-              }}
-              onError={(e) => {
-                console.error('❌ Direct video failed');
-                reportVideoError(e, { context: 'direct_video_error' });
-                handleVideoFailure();
-              }}
-            >
-              <source src={videoSources.direct} type="application/vnd.apple.mpegurl" />
-              <source src={videoSources.backup} type="video/mp4" />
-            </video>
-          )}
+          {/* Cloudflare Stream iframe */}
+          <iframe
+            ref={videoRef}
+            src={videoSources.stream}
+            className="absolute top-0 left-0 w-full h-full"
+            style={{
+              border: 'none',
+              pointerEvents: 'none',
+              opacity: videoState.error ? 0 : 1,
+              transition: 'opacity 0.8s ease-in-out',
+              objectFit: 'cover',
+              width: '120%',
+              height: '120%',
+              left: '-10%',
+              top: '-10%',
+              zIndex: 1
+            }}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={true}
+            title="Background Video - The Creek"
+            onLoad={() => {
+              console.log('✅ Cloudflare Stream iframe loaded');
+              setVideoState(prev => ({ ...prev, loaded: true, error: false }));
+            }}
+            onError={(e) => {
+              console.error('❌ Cloudflare Stream iframe failed');
+              reportVideoError(e, { context: 'stream_iframe_error' });
+              setVideoState(prev => ({ ...prev, error: true }));
+            }}
+          />
           
           {/* Loading indicator */}
           {!videoState.loaded && !videoState.error && (
