@@ -89,10 +89,19 @@ The site follows a structured conversion path:
 
 ## Key Implementation Details
 
-### Video Background
-- Cloudflare Stream integration in Hero component
-- Autoplay, loop, muted configuration for optimal UX
-- Parallax scrolling effects with Framer Motion
+### Video Background - CRITICAL IMPLEMENTATION NOTES
+- **Cloudflare Stream integration** in Hero component (`src/components/sections/Hero.jsx`)
+- **NEVER apply Framer Motion transforms directly to video iframe** - causes disappearing video
+- **Stable positioning**: Uses pure CSS positioning with `!important` declarations
+- **Multi-layer protection**:
+  - Automatic reload mechanism with exponential backoff (max 3 retries)
+  - Intersection Observer monitoring for visibility
+  - Periodic style and src validation (every 2 seconds)
+  - Page visibility change detection and recovery
+  - Fallback gradient background for network failures
+- **Error handling**: Comprehensive load/error event monitoring
+- **Configuration**: Autoplay, loop, muted, no controls for background use
+- **DO NOT MODIFY** the video implementation without understanding the persistence safeguards
 
 ### SEO Implementation
 - Comprehensive local business schema in BaseLayout.astro
