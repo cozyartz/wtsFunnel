@@ -16,6 +16,10 @@ const Hero = () => {
     offset: ["start start", "end start"]
   });
 
+  // Parallax transforms for video
+  const videoY = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const videoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.15]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setScrambleTrigger(true);
@@ -43,11 +47,23 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    // Cloudflare Stream iframe monitoring - simplified approach
+    // Check if we're on the correct domain for the video
+    const currentDomain = window.location.hostname;
+    const isCorrectDomain = currentDomain === 'wantthissite.com' || 
+                           currentDomain.includes('wantthissite.com') ||
+                           currentDomain === 'localhost';
+    
+    if (!isCorrectDomain) {
+      console.warn(`Video restricted to wantthissite.com, current domain: ${currentDomain}`);
+      // Show fallback for domain-restricted environments
+      setTimeout(() => setVideoError(true), 3000);
+    }
+
+    // Cloudflare Stream iframe monitoring
     const iframe = videoRef.current;
     if (iframe) {
       const handleLoad = () => {
-        console.log('Cloudflare Stream iframe loaded');
+        console.log('Cloudflare Stream iframe loaded successfully');
         setVideoError(false);
         setVideoLoaded(true);
         setRetryCount(0);
@@ -56,44 +72,51 @@ const Hero = () => {
       const handleError = (e) => {
         console.error('Cloudflare Stream iframe error:', e);
         setVideoLoaded(false);
-        if (retryCount < 2) {
-          // Simple reload by changing src
-          setTimeout(() => {
-            const currentSrc = iframe.src;
-            iframe.src = '';
-            setTimeout(() => {
-              iframe.src = currentSrc;
-              setRetryCount(prev => prev + 1);
-            }, 500);
-          }, 1000 * (retryCount + 1));
-        } else {
-          setVideoError(true);
-        }
+        setVideoError(true);
       };
 
       iframe.addEventListener('load', handleLoad);
       iframe.addEventListener('error', handleError);
       
-      // Minimal monitoring - just check if iframe exists
-      const checkInterval = setInterval(() => {
-        if (!document.contains(iframe)) {
-          console.error('Stream iframe removed from DOM');
-          setVideoError(true);
+      // Check for domain restriction message in iframe
+      const checkDomainRestriction = () => {
+        try {
+          // This will fail due to CORS, but we can check for the lock icon
+          if (iframe.contentDocument) {
+            const lockMessage = iframe.contentDocument.querySelector('[data-testid="lock-icon"]');
+            if (lockMessage) {
+              console.warn('Video is domain-restricted');
+              setVideoError(true);
+            }
+          }
+        } catch (e) {
+          // Expected CORS error - iframe loaded but cross-origin
+          if (!videoLoaded) {
+            // Give it more time to load
+            setTimeout(() => {
+              if (!videoLoaded) {
+                console.warn('Video may be domain-restricted, showing fallback');
+                setVideoError(true);
+              }
+            }, 5000);
+          }
         }
-      }, 30000); // Check every 30 seconds
+      };
       
-      // Load timeout - Stream should load within 10 seconds
+      // Check after a delay
+      setTimeout(checkDomainRestriction, 2000);
+      
+      // Load timeout - Stream should load within 8 seconds
       const timeoutId = setTimeout(() => {
         if (!videoLoaded && !videoError) {
-          console.warn('Stream iframe timeout, showing fallback');
+          console.warn('Stream iframe timeout - likely domain restricted');
           setVideoError(true);
         }
-      }, 10000);
+      }, 8000);
 
       return () => {
         iframe.removeEventListener('load', handleLoad);
         iframe.removeEventListener('error', handleError);
-        clearInterval(checkInterval);
         clearTimeout(timeoutId);
       };
     }
@@ -106,8 +129,14 @@ const Hero = () => {
         {/* Fallback gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900" />
         
-        {/* Cloudflare Stream Player - Official Implementation */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden">
+        {/* Cloudflare Stream Player with Parallax - Domain-aware */}
+        <motion.div 
+          className="absolute inset-0 w-full h-full overflow-hidden"
+          style={{
+            y: videoY,
+            scale: videoScale,
+          }}
+        >
           <iframe
             ref={videoRef}
             src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false"
@@ -117,7 +146,11 @@ const Hero = () => {
               pointerEvents: 'none',
               opacity: videoError ? 0 : 1,
               transition: 'opacity 0.5s ease',
-              objectFit: 'cover'
+              objectFit: 'cover',
+              width: '120%',
+              height: '120%',
+              left: '-10%',
+              top: '-10%'
             }}
             allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
             allowFullScreen={true}
@@ -130,10 +163,14 @@ const Hero = () => {
             onError={(e) => {
               console.error('Cloudflare Stream iframe failed to load:', e);
               setVideoLoaded(false);
+              // Check if domain restriction is the issue
+              if (e.target && e.target.src.includes('cloudflarestream.com')) {
+                console.warn('Video may be restricted to specific domains');
+              }
               setVideoError(true);
             }}
           />
-        </div>
+        </motion.div>
         
         {/* Subtle overlay for text readability */}
         <motion.div
