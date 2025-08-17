@@ -47,16 +47,30 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    // Check if we're on the correct domain for the video
+    // Check if we're on an allowed domain for the video
     const currentDomain = window.location.hostname;
-    const isCorrectDomain = currentDomain === 'wantthissite.com' || 
-                           currentDomain.includes('wantthissite.com') ||
-                           currentDomain === 'localhost';
+    const allowedDomains = [
+      'wantthissite.com',
+      'www.wantthissite.com',
+      'localhost',
+      '127.0.0.1',
+      // Cloudflare Pages domains
+      'cozyartz-sales-funnel.pages.dev',
+      // Allow any Cloudflare Pages subdomain
+      '.pages.dev'
+    ];
     
-    if (!isCorrectDomain) {
-      console.warn(`Video restricted to wantthissite.com, current domain: ${currentDomain}`);
-      // Show fallback for domain-restricted environments
-      setTimeout(() => setVideoError(true), 3000);
+    const isAllowedDomain = allowedDomains.some(domain => 
+      currentDomain === domain || 
+      currentDomain.includes(domain) ||
+      (domain.startsWith('.') && currentDomain.endsWith(domain))
+    );
+    
+    console.log(`Current domain: ${currentDomain}, Allowed: ${isAllowedDomain}`);
+    
+    if (!isAllowedDomain) {
+      console.warn(`Video may be restricted. Current domain: ${currentDomain}`);
+      // Don't immediately show error - let the video try to load first
     }
 
     // Cloudflare Stream iframe monitoring
@@ -106,13 +120,13 @@ const Hero = () => {
       // Check after a delay
       setTimeout(checkDomainRestriction, 2000);
       
-      // Load timeout - Stream should load within 8 seconds
+      // Load timeout - Stream should load within 5 seconds
       const timeoutId = setTimeout(() => {
         if (!videoLoaded && !videoError) {
-          console.warn('Stream iframe timeout - likely domain restricted');
+          console.warn('Stream iframe timeout - showing fallback background');
           setVideoError(true);
         }
-      }, 8000);
+      }, 5000);
 
       return () => {
         iframe.removeEventListener('load', handleLoad);
@@ -126,8 +140,11 @@ const Hero = () => {
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       {/* Cloudflare Stream Video Background - Simplified Stable Implementation */}
       <div className="absolute inset-0 w-full h-full -z-10">
-        {/* Fallback gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900" />
+        {/* Enhanced fallback background with animation */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(59,130,246,0.15),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(147,51,234,0.1),transparent_50%)]" />
+        </div>
         
         {/* Cloudflare Stream Player with Parallax - Domain-aware */}
         <motion.div 
