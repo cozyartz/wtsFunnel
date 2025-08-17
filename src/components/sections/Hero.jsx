@@ -43,172 +43,119 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    // Enhanced video monitoring with multiple safeguards
-    const iframe = videoRef.current;
-    if (iframe) {
-      const handleLoad = () => {
-        console.log('Video iframe loaded successfully');
+    // Video element monitoring
+    const video = videoRef.current;
+    if (video) {
+      const handleLoadedData = () => {
+        console.log('Video loaded and can play');
         setVideoError(false);
         setVideoLoaded(true);
         setRetryCount(0);
       };
       
-      const handleError = () => {
-        console.error('Video iframe failed to load');
+      const handleError = (e) => {
+        console.error('Video failed to load:', e);
         setVideoLoaded(false);
-        reloadVideo();
-      };
-
-      iframe.addEventListener('load', handleLoad);
-      iframe.addEventListener('error', handleError);
-      
-      // Comprehensive video persistence monitoring
-      const checkInterval = setInterval(() => {
-        // Check if iframe exists and is visible
-        if (!iframe.offsetParent || iframe.style.display === 'none') {
-          console.warn('Video iframe became hidden, restoring visibility');
-          iframe.style.display = '';
-          iframe.style.position = 'absolute';
-          iframe.style.opacity = videoError ? '0' : '1';
-        }
-        
-        // Check if iframe src is still set
-        if (!iframe.src || iframe.src === 'about:blank') {
-          console.warn('Video iframe src was cleared, reloading');
-          reloadVideo();
-        }
-        
-        // Check if iframe is still in DOM
-        if (!document.contains(iframe)) {
-          console.error('Video iframe was removed from DOM!');
+        if (retryCount < 3) {
+          setTimeout(() => {
+            video.load(); // Reload the video
+            setRetryCount(prev => prev + 1);
+          }, 1000 * Math.pow(2, retryCount));
+        } else {
           setVideoError(true);
         }
-        
-        // Force style persistence
-        if (iframe.style.width !== '100vw' || iframe.style.height !== '56.25vw') {
-          console.warn('Video iframe dimensions changed, restoring');
-          iframe.style.width = '100vw';
-          iframe.style.height = '56.25vw';
-          iframe.style.minHeight = '100vh';
-          iframe.style.minWidth = '177.78vh';
-        }
-      }, 2000);
+      };
+
+      const handleCanPlay = () => {
+        console.log('Video can start playing');
+        video.play().catch(e => {
+          console.warn('Autoplay prevented:', e);
+          // This is normal behavior in many browsers
+        });
+      };
+
+      video.addEventListener('loadeddata', handleLoadedData);
+      video.addEventListener('error', handleError);
+      video.addEventListener('canplay', handleCanPlay);
       
-      // Intersection Observer to detect if video goes off-screen unexpectedly
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting && window.scrollY < 100) {
-              console.warn('Video iframe not intersecting when it should be visible');
-              // Force re-render if we're at the top but video isn't visible
-              if (iframe.style.opacity !== '0') {
-                iframe.style.transform = 'translate(-50%, -50%)';
-              }
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      
-      observer.observe(iframe);
-      
-      // Initial load timeout with retry
-      const timeoutId = setTimeout(() => {
-        if (!videoLoaded) {
-          console.warn('Video iframe initial load timeout, attempting reload');
-          reloadVideo();
+      // Basic monitoring - check every 10 seconds
+      const checkInterval = setInterval(() => {
+        if (!document.contains(video)) {
+          console.error('Video element was removed from DOM');
+          setVideoError(true);
+        } else if (video.paused && !videoError) {
+          console.log('Video paused, attempting to restart');
+          video.play().catch(e => console.warn('Play failed:', e));
         }
       }, 10000);
-
-      // Page visibility change handler
-      const handleVisibilityChange = () => {
-        if (!document.hidden && iframe) {
-          // Re-verify video when page becomes visible
-          setTimeout(() => {
-            if (!iframe.src || iframe.style.display === 'none') {
-              console.log('Page visible but video missing, reloading');
-              reloadVideo();
-            }
-          }, 1000);
-        }
-      };
       
-      document.addEventListener('visibilitychange', handleVisibilityChange);
+      // Initial load timeout
+      const timeoutId = setTimeout(() => {
+        if (!videoLoaded && !videoError) {
+          console.warn('Video taking too long to load, reloading');
+          video.load();
+        }
+      }, 15000);
 
       return () => {
-        iframe.removeEventListener('load', handleLoad);
-        iframe.removeEventListener('error', handleError);
+        video.removeEventListener('loadeddata', handleLoadedData);
+        video.removeEventListener('error', handleError);
+        video.removeEventListener('canplay', handleCanPlay);
         clearInterval(checkInterval);
         clearTimeout(timeoutId);
-        observer.disconnect();
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
   }, [videoError, videoLoaded, retryCount]);
 
   return (
     <section ref={containerRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
-      {/* Cloudflare Stream Video Background - Fixed Implementation */}
+      {/* Cloudflare Stream Video Background - Simplified Stable Implementation */}
       <div className="absolute inset-0 w-full h-full -z-10">
         {/* Fallback gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900" />
         
-        {/* Ultra-stable container for the video */}
-        <div 
-          className="absolute inset-0 w-full h-full"
-          style={{ 
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden',
-            zIndex: -1
-          }}
-        >
-          <iframe
+        {/* Video container - using HTML5 video for maximum reliability */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <video
             ref={videoRef}
-            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?muted=true&preload=true&loop=true&autoplay=true&controls=false&poster=https%3A%2F%2Fcustomer-fb73nihqgo3s10w7.cloudflarestream.com%2F8ad00fdbc3d70603421156b74714001e%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
-            loading="eager"
+            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto transform -translate-x-1/2 -translate-y-1/2 object-cover"
             style={{
-              position: 'absolute !important',
-              top: '50% !important',
-              left: '50% !important',
-              width: '100vw !important',
-              height: '56.25vw !important', /* 16:9 aspect ratio */
-              minHeight: '100vh !important',
-              minWidth: '177.78vh !important', /* 16:9 aspect ratio */
-              transform: 'translate(-50%, -50%) !important',
-              border: 'none !important',
-              objectFit: 'cover',
+              pointerEvents: 'none',
               opacity: videoError ? 0 : 1,
-              transition: 'opacity 0.3s ease',
-              display: 'block !important',
-              visibility: 'visible !important',
-              zIndex: -1,
-              pointerEvents: 'none'
+              transition: 'opacity 0.5s ease'
             }}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-            allowFullScreen={true}
-            title="Background Video"
-            onLoad={() => {
-              console.log('Video iframe onLoad event fired');
+            autoPlay
+            muted
+            loop
+            playsInline
+            onLoadedData={() => {
+              console.log('Video loaded successfully');
               setVideoLoaded(true);
               setVideoError(false);
             }}
-            onError={() => {
-              console.error('Video iframe onError event fired');
+            onError={(e) => {
+              console.error('Video failed to load:', e);
               setVideoLoaded(false);
-              reloadVideo();
+              setVideoError(true);
             }}
-          />
+          >
+            <source 
+              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.m3u8" 
+              type="application/vnd.apple.mpegurl" 
+            />
+            <source 
+              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.mpd" 
+              type="application/dash+xml" 
+            />
+            Your browser does not support the video tag.
+          </video>
         </div>
         
-        {/* Optional subtle parallax overlay */}
+        {/* Subtle overlay for text readability */}
         <motion.div
-          className="absolute inset-0 bg-black/10"
+          className="absolute inset-0 bg-black/5"
           style={{
-            opacity: useTransform(scrollYProgress, [0, 1], [0, 0.2])
+            opacity: useTransform(scrollYProgress, [0, 1], [0, 0.15])
           }}
         />
       </div>
