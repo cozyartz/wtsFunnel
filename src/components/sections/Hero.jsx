@@ -30,11 +30,11 @@ const Hero = () => {
   const videoY = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const videoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.15]);
 
-  // Cloudflare Stream sources - "The Creek" video (exact ID from screenshot)
+  // Cloudflare Stream sources - Working video ID provided by user
   const videoSources = {
-    stream: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/iframe?autoplay=true&muted=true&loop=true&controls=false",
-    direct: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/manifest/video.m3u8",
-    backup: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad8f40c307804211506474188d4/downloads/default.mp4"
+    stream: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false",
+    direct: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.m3u8",
+    backup: "https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.mpd"
   };
 
   useEffect(() => {
