@@ -43,64 +43,56 @@ const Hero = () => {
   };
 
   useEffect(() => {
-    // Video element monitoring
-    const video = videoRef.current;
-    if (video) {
-      const handleLoadedData = () => {
-        console.log('Video loaded and can play');
+    // Cloudflare Stream iframe monitoring - simplified approach
+    const iframe = videoRef.current;
+    if (iframe) {
+      const handleLoad = () => {
+        console.log('Cloudflare Stream iframe loaded');
         setVideoError(false);
         setVideoLoaded(true);
         setRetryCount(0);
       };
       
       const handleError = (e) => {
-        console.error('Video failed to load:', e);
+        console.error('Cloudflare Stream iframe error:', e);
         setVideoLoaded(false);
-        if (retryCount < 3) {
+        if (retryCount < 2) {
+          // Simple reload by changing src
           setTimeout(() => {
-            video.load(); // Reload the video
-            setRetryCount(prev => prev + 1);
-          }, 1000 * Math.pow(2, retryCount));
+            const currentSrc = iframe.src;
+            iframe.src = '';
+            setTimeout(() => {
+              iframe.src = currentSrc;
+              setRetryCount(prev => prev + 1);
+            }, 500);
+          }, 1000 * (retryCount + 1));
         } else {
           setVideoError(true);
         }
       };
 
-      const handleCanPlay = () => {
-        console.log('Video can start playing');
-        video.play().catch(e => {
-          console.warn('Autoplay prevented:', e);
-          // This is normal behavior in many browsers
-        });
-      };
-
-      video.addEventListener('loadeddata', handleLoadedData);
-      video.addEventListener('error', handleError);
-      video.addEventListener('canplay', handleCanPlay);
+      iframe.addEventListener('load', handleLoad);
+      iframe.addEventListener('error', handleError);
       
-      // Basic monitoring - check every 10 seconds
+      // Minimal monitoring - just check if iframe exists
       const checkInterval = setInterval(() => {
-        if (!document.contains(video)) {
-          console.error('Video element was removed from DOM');
+        if (!document.contains(iframe)) {
+          console.error('Stream iframe removed from DOM');
           setVideoError(true);
-        } else if (video.paused && !videoError) {
-          console.log('Video paused, attempting to restart');
-          video.play().catch(e => console.warn('Play failed:', e));
         }
-      }, 10000);
+      }, 30000); // Check every 30 seconds
       
-      // Initial load timeout
+      // Load timeout - Stream should load within 10 seconds
       const timeoutId = setTimeout(() => {
         if (!videoLoaded && !videoError) {
-          console.warn('Video taking too long to load, reloading');
-          video.load();
+          console.warn('Stream iframe timeout, showing fallback');
+          setVideoError(true);
         }
-      }, 15000);
+      }, 10000);
 
       return () => {
-        video.removeEventListener('loadeddata', handleLoadedData);
-        video.removeEventListener('error', handleError);
-        video.removeEventListener('canplay', handleCanPlay);
+        iframe.removeEventListener('load', handleLoad);
+        iframe.removeEventListener('error', handleError);
         clearInterval(checkInterval);
         clearTimeout(timeoutId);
       };
@@ -114,41 +106,33 @@ const Hero = () => {
         {/* Fallback gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-primary-900" />
         
-        {/* Video container - using HTML5 video for maximum reliability */}
+        {/* Cloudflare Stream Player - Official Implementation */}
         <div className="absolute inset-0 w-full h-full overflow-hidden">
-          <video
+          <iframe
             ref={videoRef}
-            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto transform -translate-x-1/2 -translate-y-1/2 object-cover"
+            src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/iframe?autoplay=true&muted=true&loop=true&controls=false"
+            className="absolute top-0 left-0 w-full h-full"
             style={{
+              border: 'none',
               pointerEvents: 'none',
               opacity: videoError ? 0 : 1,
-              transition: 'opacity 0.5s ease'
+              transition: 'opacity 0.5s ease',
+              objectFit: 'cover'
             }}
-            autoPlay
-            muted
-            loop
-            playsInline
-            onLoadedData={() => {
-              console.log('Video loaded successfully');
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen={true}
+            title="Background Video"
+            onLoad={() => {
+              console.log('Cloudflare Stream iframe loaded successfully');
               setVideoLoaded(true);
               setVideoError(false);
             }}
             onError={(e) => {
-              console.error('Video failed to load:', e);
+              console.error('Cloudflare Stream iframe failed to load:', e);
               setVideoLoaded(false);
               setVideoError(true);
             }}
-          >
-            <source 
-              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.m3u8" 
-              type="application/vnd.apple.mpegurl" 
-            />
-            <source 
-              src="https://customer-fb73nihqgo3s10w7.cloudflarestream.com/8ad00fdbc3d70603421156b74714001e/manifest/video.mpd" 
-              type="application/dash+xml" 
-            />
-            Your browser does not support the video tag.
-          </video>
+          />
         </div>
         
         {/* Subtle overlay for text readability */}
